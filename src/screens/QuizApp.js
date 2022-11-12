@@ -17,33 +17,62 @@ const QuizApp = () => {
     // Get quiz id
     const [quizId, setQuizId] = useState(null)
 
+    let url = "http://localhost:8000/quiz/api/quiz-attempt/questions/?quiz_uid=13268d98-3b1c-46ec-ba43-362f9b88a33f";
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     const showNext = () => {
+        const token = getCookie("csrftoken");
+        console.log(token);      
         if (selectedAnswer != null) {
-            let payload = { 
-				'question_id': document.getElementById("question_id").value, 
-				'answer_id': selectedAnswer,
-                'quiz_id' : quizId,
-                'csrfmiddlewaretoken': 'input[name=csrfmiddlewaretoken]'
-			}
+            let payload = {
+                'question_id': document.getElementById("question_id").value,
+                'answer_id': selectedAnswer,
+                'quiz_id': quizId,
+            }
+
+            const config = {     
+                headers: { 
+                    'Access-Control-Allow-Credentials': 'true',
+                    'Access-Control-Allow-Origin': '*',
+                    'X-CSRFToken': token
+                },
+                withCredentials: true,
+                crossDomain: true
+            }
+
+            var edit_url = "http://localhost:8000/quiz/api/attempt-quiz-answer/?quiz_id=" + quizId;
+            var res = axios.post(edit_url, payload, config);
+            console.log(res);
         }
 
         if (ind < len.length - 1) {
             setInd(++ind);
         }
-        console.log(quizId);
-        console.log(ind);
         setQuiz(nextq[ind]);
     }
-    
+
     const showPrev = () => {
         if (ind > 0) {
             setInd(--ind);
         }
-        console.log(ind);
         setQuiz(nextq[ind]);
     }
 
-    let url = "http://localhost:8000/quiz/api/quiz-attempt/questions/?quiz_uid=13268d98-3b1c-46ec-ba43-362f9b88a33f";
     async function get_quiz_questions_from_api_call() {
         const result = (await axios.get(url));
         return result;
@@ -55,8 +84,6 @@ const QuizApp = () => {
         setNextq(res.data.data);
         setLen(res.data.data);
         setQuizId(res.data.quiz_id);
-
-        console.log(res.data);
     }
 
     useEffect(() => {
@@ -75,24 +102,24 @@ const QuizApp = () => {
                     <p>Question : <span className='font-semibold'>1 / 10</span></p>
                     <p>Timer</p>
                 </div>
-                        <div>
-                            <div className='p-2'>
-                                <h2 className='font-bold p-2 text-2xl'>{quiz.question}</h2>
-                                <input type="hidden" id="question_id" value={quiz.question_id} />
-                            </div>
-                            
-                            <div className='md:flex flex-wrap md:w-[40rem] justify-between'>
-                            {quiz.answers.map(function (atask, i) {
-                                return (
-                                    <div key={i} className='font-mono'>
-                                            {/* <option value={atask.answer_id}>{atask.answer}</option> */}
-                                            <Options setSelectedAnswer={setSelectedAnswer} name="answer_id" value_id={atask.answer_id} value={atask.answer} />
-                                    </div>
-                                )
-                            })}
-                            </div>
+                <div>
+                    <div className='p-2'>
+                        <h2 className='font-bold p-2 text-2xl'>{quiz.question}</h2>
+                        <input type="hidden" id="question_id" value={quiz.question_id} />
+                    </div>
 
-                        </div>
+                    <div className='md:flex flex-wrap md:w-[40rem] justify-between'>
+                        {quiz.answers.map(function (atask, i) {
+                            return (
+                                <div key={i} className='font-mono'>
+                                    {/* <option value={atask.answer_id}>{atask.answer}</option> */}
+                                    <Options setSelectedAnswer={setSelectedAnswer} name="answer_id" value_id={atask.answer_id} value={atask.answer} />
+                                </div>
+                            )
+                        })}
+                    </div>
+
+                </div>
 
                 <div className='flex justify-around p-3'>
                     <button onClick={showPrev} className='px-4 mx-3 py-1 bg-gray-300 rounded-sm hover:bg-gray-500 font-mono font-semibold text-sm tracking-wider hover:text-white'>Previous</button>
