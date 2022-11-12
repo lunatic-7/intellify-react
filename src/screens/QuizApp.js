@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import Options from '../models/Options'
+import Timer from '../models/Timer';
 
 const QuizApp = () => {
 
@@ -16,6 +17,8 @@ const QuizApp = () => {
     const [selectedAnswer, setSelectedAnswer] = useState(null)
     // Get quiz id
     const [quizId, setQuizId] = useState(null)
+
+    const [timing, setTiming] = useState(0)
 
     let url = "http://localhost:8000/quiz/api/quiz-attempt/questions/?quiz_uid=13268d98-3b1c-46ec-ba43-362f9b88a33f";
     
@@ -56,7 +59,7 @@ const QuizApp = () => {
             }
 
             var edit_url = "http://localhost:8000/quiz/api/attempt-quiz-answer/?quiz_id=" + quizId;
-            var res = axios.post(edit_url, payload, config);
+            var res = axios.get(edit_url, payload, config);
             console.log(res);
         }
 
@@ -84,6 +87,9 @@ const QuizApp = () => {
         setNextq(res.data.data);
         setLen(res.data.data);
         setQuizId(res.data.quiz_id);
+        const time = new Date();
+        time.setSeconds(time.getSeconds() + 600); // 10 minutes timer
+        setTiming(time);
     }
 
     useEffect(() => {
@@ -97,18 +103,18 @@ const QuizApp = () => {
     return (
         <div className='flex items-center justify-center h-screen'>
             <div className='md:p-10 flex flex-col border-2 border-gray-100 shadow-md text-center w-fit'>
-                <div className='md:flex justify-around p-3'>
+                <div className='md:flex justify-around p-3 text-xl'>
                     <p>Subject - <span className='font-semibold'>Computer</span></p>
-                    <p>Question : <span className='font-semibold'>1 / 10</span></p>
-                    <p>Timer</p>
+                    <p>Question : <span className='font-semibold'>{ind + 1} / {len.length}</span></p>
+                    <Timer expiryTimestamp={timing}/>
                 </div>
                 <div>
                     <div className='p-2'>
-                        <h2 className='font-bold p-2 text-2xl'>{quiz.question}</h2>
+                        <h2 className='font-bold p-3 text-3xl'>{quiz.question}</h2>
                         <input type="hidden" id="question_id" value={quiz.question_id} />
                     </div>
 
-                    <div className='md:flex flex-wrap md:w-[40rem] justify-between'>
+                    <div className='md:flex flex-wrap md:w-[40rem] p-2 justify-between'>
                         {quiz.answers.map(function (atask, i) {
                             return (
                                 <div key={i} className='font-mono'>
